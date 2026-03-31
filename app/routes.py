@@ -408,28 +408,7 @@ def export_pdf():
     # Footer with TWO Signatures - Using table for layout
     html_content += f"""
         <div class="footer">
-            <table class="signatures-container" cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 30px;">
-                <tr>
-                    <!-- Left Signature - MsSTANSLOUS -->
-                    <td class="signature-box" style="width: 50%; text-align: center;">
-                        <div class="signature-line" style="width: 70%; margin: 0 auto 8px auto; border-top: 1px solid #999999;"></div>
-                        <div class="signature-name">MsSTANSLOUS</div>
-                        <div class="signature-title">System Developer</div>
-                        <div class="signature-date">Generated: {current_date}</div>
-                        <div class="stamp">✦ DIGITAL SIGNATURE ✦</div>
-                    </td>
-                    
-                    <!-- Right Signature - System Admin Rejoice -->
-                    <td class="signature-box" style="width: 50%; text-align: center;">
-                        <div class="signature-line" style="width: 70%; margin: 0 auto 8px auto; border-top: 1px solid #999999;"></div>
-                        <div class="signature-name">Rejoice</div>
-                        <div class="signature-title">System Administrator</div>
-                        <div class="signature-date">Authorized: {datetime.now().strftime("%B %d, %Y")}</div>
-                        <div class="stamp">✓ APPROVED ✓</div>
-                    </td>
-                </tr>
-            </table>
-            
+ 
             <!-- Report Footer Note -->
             <div class="footer-note">
                 This is a computer-generated document. No physical signature is required.<br/>
