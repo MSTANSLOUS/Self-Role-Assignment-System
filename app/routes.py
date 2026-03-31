@@ -27,34 +27,43 @@ def index():
 
 @routes_pb.route("/admin", methods=["GET", "POST"])
 def admin():
-    #checking the request
+    # Handle POST request (create new role)
     if request.method == "POST":
-        # 1. Grab the data from the admin form
-        title = request.form.get('role_title')  # Make sure your HTML input name is 'role_title'
-        spots = request.form.get('spots_available')  # Make sure your HTML input name is 'spots_available'
-        desc = request.form.get('role_desc')  # Make sure your HTML input name is 'role_desc'
-
-        # 2. Create a new Role object based on your model
+        title = request.form.get('role_title')
+        spots = request.form.get('spots_available')
+        desc = request.form.get('role_desc')
+        
         new_role = Role(role=title, description=desc, spots=int(spots))
-
-        # 3. Save it to the database
         db.session.add(new_role)
         db.session.commit()
-
+        
         print(f"Role '{title}' saved successfully!")
         return redirect(url_for('routes.admin'))
-
-    # --- THIS IS THE NEW GET PART ---
-    # 1. Grab all registered users from the database
-    all_users = User.query.all()
-
-    # NEW: 2. Grab all created roles from the database too!
+    
+    # Handle GET request - with pagination
+    # Get page number from URL, default to 1
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Show 10 users per page
+    
+    # Get paginated users
+    pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    total_users = pagination.total
+    total_pages = pagination.pages
+    
+    # Get all roles (no pagination needed for roles)
     all_roles = Role.query.all()
-
-    #if its GET just show the page
-    return render_template("admin.html", users=all_users, roles=all_roles)
-
-
+    
+    return render_template(
+        "admin.html", 
+        users=users, 
+        roles=all_roles,
+        pagination=pagination,
+        current_page=page,
+        total_pages=total_pages,
+        total_users=total_users,
+        per_page=per_page
+    )
 
 
 #register fro a role

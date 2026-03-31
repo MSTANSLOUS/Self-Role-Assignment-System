@@ -37,7 +37,7 @@
             width: 100%;
         }
         
-        /* Mobile card view for small screens - keeps original layout */
+        /* Mobile card view for small screens */
         @media (max-width: 768px) {
             .desktop-table {
                 display: block;
@@ -74,6 +74,7 @@
         }
         
         .pagination-btn:hover:not(:disabled) {
+            background-color: #f3f4f6;
             transform: translateY(-1px);
         }
         
@@ -83,6 +84,17 @@
             top: 0;
             background: #f9fafb;
             z-index: 10;
+        }
+        
+        /* Active page highlight */
+        .page-active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .page-active:hover {
+            background-color: #2563eb;
         }
     </style>
 </head>
@@ -105,7 +117,6 @@
         <!-- Create Role & Manage Roles Section -->
         <div class="overflow-hidden w-full bg-white rounded-lg shadow-sm border border-gray-100">
             <div id="slideTrack" class="flex items-start w-[200%] transition-transform duration-500 ease-in-out transform translate-x-0">
-
                 <div class="w-1/2 p-6 flex-shrink-0">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-slate-800">Create a New Role</h2>
@@ -120,19 +131,16 @@
                             <input type="text" placeholder="e.g., Network Assistant" name="role_title" required
                                    class="w-full mt-1 p-3 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-600 bg-gray-50 focus:bg-white transition">
                         </div>
-
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase">Total Spots</label>
                             <input type="number" placeholder="e.g., 5" name="spots_available" required
                                    class="w-full mt-1 p-3 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-600 bg-gray-50 focus:bg-white transition">
                         </div>
-
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase">Description</label>
                             <input type="text" placeholder="Briefly describe responsibilities" name="role_desc" required
                                    class="w-full mt-1 p-3 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-600 bg-gray-50 focus:bg-white transition">
                         </div>
-
                         <div class="md:col-span-3 text-right">
                             <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-3 rounded hover:bg-blue-700 transition w-full md:w-auto">
                                 Add Active Role
@@ -148,7 +156,6 @@
                         </button>
                         <h2 class="text-xl font-bold text-slate-800">Manage Created Roles</h2>
                     </div>
-
                     <div class="overflow-x-auto max-h-[270px] overflow-y-auto custom-scroll border border-gray-100 rounded-lg shadow-sm">
                         <table class="w-full text-left border-collapse bg-white">
                             <thead class="sticky top-0 bg-gray-50 shadow-sm z-10">
@@ -156,22 +163,19 @@
                                     <th class="p-4">Role Title</th>
                                     <th class="p-4">Spots Left</th>
                                     <th class="p-4 text-right">Actions</th>
-                                </tr>
+                                 </tr>
                             </thead>
-
                             <tbody class="text-sm">
                                 {% for role in roles %}
                                 <tr class="border-b border-gray-50 hover:bg-gray-50/50">
                                     <td class="p-4 font-semibold text-slate-800">{{ role.role }}</td>
                                     <td class="p-4 text-gray-500">{{ role.spots }}</td>
                                     <td class="p-4 text-right">
-                                        <div class="flex justify-end items-center gap-3">
-                                            <form action="{{ url_for('routes.delete_role', role_id=role.id) }}" method="POST" onsubmit="return confirm('Delete this role? This might affect registered users.');">
-                                                <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 transition">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <form action="{{ url_for('routes.delete_role', role_id=role.id) }}" method="POST" onsubmit="return confirm('Delete this role? This will also delete all users registered for it.');">
+                                            <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 transition">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -179,18 +183,21 @@
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- Registrations Section with Horizontal Scroll -->
+        <!-- Registrations Section with Working Pagination -->
         <section class="bg-white border border-gray-100 rounded-lg p-6 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 mb-1">Current Registrations</h2>
-                    <p class="text-sm text-gray-500">Track which users have registered for specific roles.</p>
+                    <p class="text-sm text-gray-500">
+                        Showing {{ users|length }} of {{ total_users }} total registrations
+                        {% if total_pages > 1 %}
+                            • Page {{ current_page }} of {{ total_pages }}
+                        {% endif %}
+                    </p>
                 </div>
-
                 <a href="{{ url_for('routes.export_pdf') }}" class="flex items-center justify-center space-x-2 bg-red-600 text-white text-sm font-semibold px-4 py-2.5 rounded hover:bg-red-700 transition w-full md:w-auto shadow-sm">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>Export to PDF</span>
@@ -241,18 +248,15 @@
                                 Remove
                             </button>
                         </form>
-                        
                         <div class="space-y-3">
                             <div>
                                 <div class="text-xs font-bold text-gray-400 uppercase mb-1">Full Name</div>
                                 <div class="text-base font-semibold text-slate-800 pr-16">{{ user.name }}</div>
                             </div>
-                            
                             <div>
                                 <div class="text-xs font-bold text-gray-400 uppercase mb-1">Email</div>
                                 <div class="text-sm text-gray-600 break-all">{{ user.email }}</div>
                             </div>
-                            
                             <div>
                                 <div class="text-xs font-bold text-gray-400 uppercase mb-1">Selected Role</div>
                                 <span class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-bold">
@@ -270,48 +274,80 @@
                 {% endif %}
             </div>
 
-            <!-- Pagination Placeholder - Ready for backend integration -->
-            {% if users and users|length > 10 %}
+            <!-- WORKING PAGINATION CONTROLS -->
+            {% if total_pages > 1 %}
             <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-sm text-gray-500">
-                    Showing <span class="font-semibold">1</span> to <span class="font-semibold">{{ users|length if users|length < 10 else 10 }}</span> of <span class="font-semibold">{{ users|length }}</span> registrations
+                    Showing <span class="font-semibold">{{ ((current_page - 1) * per_page) + 1 }}</span> to 
+                    <span class="font-semibold">{{ ((current_page - 1) * per_page) + users|length }}</span> of 
+                    <span class="font-semibold">{{ total_users }}</span> registrations
                 </div>
                 
                 <div class="flex items-center gap-2">
-                    <button disabled class="pagination-btn px-3 py-1 rounded border border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50">
-                        Previous
-                    </button>
+                    <!-- Previous Button -->
+                    {% if current_page > 1 %}
+                        <a href="{{ url_for('routes.admin', page=current_page - 1) }}" 
+                           class="pagination-btn px-4 py-2 rounded border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium">
+                            ← Previous
+                        </a>
+                    {% else %}
+                        <button disabled class="pagination-btn px-4 py-2 rounded border border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 text-sm">
+                            ← Previous
+                        </button>
+                    {% endif %}
                     
+                    <!-- Page Numbers -->
                     <div class="flex gap-1">
-                        <button class="pagination-btn w-8 h-8 rounded bg-blue-600 text-white text-sm font-semibold">1</button>
-                        <button class="pagination-btn w-8 h-8 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">2</button>
-                        <button class="pagination-btn w-8 h-8 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">3</button>
-                        <span class="px-2 text-gray-400">...</span>
+                        {% for page_num in range(1, total_pages + 1) %}
+                            {% if page_num == current_page %}
+                                <span class="w-9 h-9 flex items-center justify-center rounded bg-blue-600 text-white text-sm font-semibold">
+                                    {{ page_num }}
+                                </span>
+                            {% elif page_num == 1 or page_num == total_pages or (page_num >= current_page - 2 and page_num <= current_page + 2) %}
+                                <a href="{{ url_for('routes.admin', page=page_num) }}" 
+                                   class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition text-sm">
+                                    {{ page_num }}
+                                </a>
+                            {% elif page_num == current_page - 3 or page_num == current_page + 3 %}
+                                <span class="w-9 h-9 flex items-center justify-center text-gray-400">...</span>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     
-                    <button class="pagination-btn px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50">
-                        Next
-                    </button>
+                    <!-- Next Button -->
+                    {% if current_page < total_pages %}
+                        <a href="{{ url_for('routes.admin', page=current_page + 1) }}" 
+                           class="pagination-btn px-4 py-2 rounded border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium">
+                            Next →
+                        </a>
+                    {% else %}
+                        <button disabled class="pagination-btn px-4 py-2 rounded border border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 text-sm">
+                            Next →
+                        </button>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
             
             <!-- Hint for horizontal scroll on small desktops -->
+            {% if users %}
             <div class="mt-4 text-center text-xs text-gray-400 desktop-table hidden sm:block">
                 <i data-lucide="scroll" class="inline w-3 h-3 mr-1"></i>
                 Scroll horizontally to see all columns →
             </div>
+            {% endif %}
         </section>
     </main>
 
     <script>
         // Initialize Lucide icons
-        lucide.createIcons();
-
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
         // Control the sliding dashboard
         function slidePage(direction) {
             const track = document.getElementById('slideTrack');
-
             if (direction === 'manage') {
                 track.classList.remove('translate-x-0');
                 track.classList.add('-translate-x-1/2');
@@ -322,17 +358,16 @@
         }
         
         // Re-initialize icons after any dynamic content
-        if (typeof lucide !== 'undefined') {
-            setTimeout(() => {
+        setTimeout(() => {
+            if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
-            }, 100);
-        }
+            }
+        }, 100);
         
-        // Optional: Add horizontal scroll indicator
+        // Add horizontal scroll indicator
         const tableContainer = document.querySelector('.table-container');
         if (tableContainer) {
             tableContainer.addEventListener('scroll', function() {
-                // Could add a shadow indicator when scrolled
                 if (this.scrollLeft > 0) {
                     this.style.boxShadow = 'inset -1px 0 0 0 #e5e7eb';
                 } else {
