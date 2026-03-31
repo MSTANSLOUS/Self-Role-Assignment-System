@@ -159,62 +159,316 @@ def delete_role(role_id):
 
 
 
-
 @routes_pb.route("/export-pdf")
 def export_pdf():
     # 1. Grab all registered users from the database
     users = User.query.all()
+    
+    # Get current date for the report
+    from datetime import datetime
+    current_date = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+    
+    # Count total registrations and unique roles
+    total_users = len(users)
+    unique_roles = len(set(user.role.role for user in users)) if users else 0
 
-    # 2. Create the HTML layout for the PDF (Tailwind won't work perfectly in PDF, so we use standard CSS)
+    # 2. Create the HTML layout for the PDF with professional table design
     html_content = f"""
     <html>
     <head>
+        <meta charset="UTF-8">
+        <title>Registrations Report</title>
         <style>
-            body {{ font-family: Helvetica, Arial, sans-serif; color: #334155; margin: 30px; }}
-            .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ef4444; padding-bottom: 10px; }}
-            .title {{ font-size: 24px; font-weight: bold; color: #1e293b; }}
-            .tag {{ font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th {{ background-color: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }}
-            td {{ padding: 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }}
-            .role-badge {{ background-color: #eff6ff; color: #2563eb; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }}
-            .footer {{ text-align: center; margin-top: 40px; font-size: 12px; color: #64748b; }}
-            .signature {{ font-weight: bold; color: #0f172a; font-size: 14px; margin-top: 5px; }}
+            @page {{
+                size: A4;
+                margin: 2cm;
+                @bottom-center {{
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 9px;
+                    color: #94a3b8;
+                }}
+            }}
+            
+            body {{
+                font-family: 'Helvetica', 'Arial', sans-serif;
+                color: #1e293b;
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
+            }}
+            
+            /* Header */
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #2563eb;
+            }}
+            
+            .title {{
+                font-size: 28px;
+                font-weight: bold;
+                color: #0f172a;
+                margin-bottom: 5px;
+            }}
+            
+            .subtitle {{
+                font-size: 14px;
+                color: #64748b;
+                margin-top: 5px;
+            }}
+            
+            .date {{
+                font-size: 11px;
+                color: #94a3b8;
+                margin-top: 8px;
+            }}
+            
+            /* Stats Cards */
+            .stats-container {{
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 35px;
+                gap: 15px;
+            }}
+            
+            .stat-card {{
+                flex: 1;
+                background: #f8fafc;
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+                border: 1px solid #e2e8f0;
+            }}
+            
+            .stat-number {{
+                font-size: 32px;
+                font-weight: bold;
+                color: #2563eb;
+                line-height: 1.2;
+            }}
+            
+            .stat-label {{
+                font-size: 10px;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 5px;
+            }}
+            
+            /* Table Styles - Professional Design */
+            .registrations-table {{
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                margin: 25px 0;
+                font-size: 12px;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }}
+            
+            .registrations-table th {{
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                color: white;
+                font-weight: 600;
+                font-size: 11px;
+                letter-spacing: 0.5px;
+                padding: 14px 16px;
+                text-align: left;
+            }}
+            
+            .registrations-table td {{
+                padding: 12px 16px;
+                background-color: white;
+                border-bottom: 1px solid #e2e8f0;
+                color: #334155;
+            }}
+            
+            .registrations-table tr:last-child td {{
+                border-bottom: none;
+            }}
+            
+            .registrations-table tr:hover td {{
+                background-color: #f8fafc;
+            }}
+            
+            /* Zebra striping for better readability */
+            .registrations-table tr:nth-child(even) td {{
+                background-color: #fafafa;
+            }}
+            
+            .registrations-table tr:nth-child(even):hover td {{
+                background-color: #f5f5f5;
+            }}
+            
+            .role-badge {{
+                display: inline-block;
+                background: #dbeafe;
+                color: #1e40af;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.3px;
+            }}
+            
+            /* Footer with Signatures */
+            .footer {{
+                margin-top: 50px;
+                padding-top: 30px;
+            }}
+            
+            .signatures-container {{
+                display: flex;
+                justify-content: space-between;
+                gap: 40px;
+                margin-top: 20px;
+            }}
+            
+            .signature-box {{
+                flex: 1;
+                text-align: center;
+            }}
+            
+            .signature-line {{
+                width: 80%;
+                margin: 0 auto 8px auto;
+                border-top: 1px solid #cbd5e1;
+            }}
+            
+            .signature-name {{
+                font-size: 12px;
+                font-weight: 600;
+                color: #0f172a;
+                margin-bottom: 4px;
+            }}
+            
+            .signature-title {{
+                font-size: 9px;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }}
+            
+            .signature-date {{
+                font-size: 8px;
+                color: #94a3b8;
+                margin-top: 5px;
+            }}
+            
+            .stamp {{
+                font-size: 10px;
+                color: #2563eb;
+                font-weight: bold;
+                margin-top: 8px;
+                letter-spacing: 1px;
+            }}
+            
+            /* Empty state */
+            .empty-state {{
+                text-align: center;
+                padding: 50px 20px;
+                color: #94a3b8;
+            }}
         </style>
     </head>
     <body>
+        <!-- Header -->
         <div class="header">
-            <div class="title">Current Registrations Report</div>
-            <div class="tag">System Control Panel</div>
+            <div class="title">Registrations Report</div>
+            <div class="subtitle">Role Assignment System</div>
+            <div class="date">Generated on {current_date}</div>
         </div>
-
-        <table>
+    """
+    
+    # Add statistics cards if there are users
+    if users:
+        html_content += f"""
+        <!-- Statistics -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number">{total_users}</div>
+                <div class="stat-label">Total Registrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{unique_roles}</div>
+                <div class="stat-label">Roles Filled</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{datetime.now().strftime("%b %d, %Y")}</div>
+                <div class="stat-label">Report Date</div>
+            </div>
+        </div>
+        """
+    
+    # Table Section
+    if users:
+        html_content += """
+        <table class="registrations-table">
             <thead>
                 <tr>
-                    <th>Full Name</th>
-                    <th>Student Email</th>
-                    <th>Selected Role</th>
-                </tr>
+                    <th style="width: 30%">Full Name</th>
+                    <th style="width: 45%">Email Address</th>
+                    <th style="width: 25%">Selected Role</th>
+                 </tr>
             </thead>
             <tbody>
-    """
-
-    for user in users:
-        html_content += f"""
+        """
+        
+        for user in users:
+            html_content += f"""
                 <tr>
-                    <td><b>{user.name}</b></td>
+                    <td style="font-weight: 500;">{user.name}</td>
                     <td>{user.email}</td>
                     <td><span class="role-badge">{user.role.role}</span></td>
                 </tr>
-        """
-
-    html_content += f"""
+            """
+        
+        html_content += """
             </tbody>
         </table>
-
+        """
+    else:
+        html_content += """
+        <div class="empty-state">
+            <p>No registrations found in the system.</p>
+            <p style="font-size: 11px; margin-top: 8px;">Register some roles to see them here</p>
+        </div>
+        """
+    
+    # Footer with TWO Signatures - MsSTANSLOUS on left, Rejoice on right
+    html_content += f"""
         <div class="footer">
-            <p>Report generated successfully.</p>
-            <div class="signature">Generated by: MsSTANSLOUS </div>
+            <div class="signatures-container">
+                <!-- Left Signature - MsSTANSLOUS -->
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-name">MsSTANSLOUS</div>
+                    <div class="signature-title">System Developer</div>
+                    <div class="signature-date">Generated: {current_date}</div>
+                    <div class="stamp">✦ DIGITAL SIGNATURE ✦</div>
+                </div>
+                
+                <!-- Right Signature - System Admin Rejoice -->
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Rejoice</div>
+                    <div class="signature-title">System Administrator</div>
+                    <div class="signature-date">Authorized: {datetime.now().strftime("%B %d, %Y")}</div>
+                    <div class="stamp">✓ APPROVED ✓</div>
+                </div>
+            </div>
+            
+            <!-- Report Footer Note -->
+            <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                <p style="font-size: 8px; color: #94a3b8; margin: 0;">
+                    This is a computer-generated document. No physical signature is required.
+                </p>
+                <p style="font-size: 8px; color: #94a3b8; margin: 5px 0 0 0;">
+                    Role Assignment System • MsSTANSLOUS • All Rights Reserved
+                </p>
+            </div>
         </div>
     </body>
     </html>
