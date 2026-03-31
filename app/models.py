@@ -5,7 +5,7 @@ db =SQLAlchemy()
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.String(80))
-    description = db.Column(db.String(120))
+    description = db.Column(db.String(500))
     spots = db.Column(db.Integer)  # Added this to hold the number of available spots!
 
     # NEW: This helps the Role know which Users belong to it
