@@ -126,259 +126,62 @@ def delete_role(role_id):
 
 
 
+
 @routes_pb.route("/export-pdf")
 def export_pdf():
     # 1. Grab all registered users from the database
     users = User.query.all()
-    
-    # Get current date for the report
-    from datetime import datetime
-    current_date = datetime.now().strftime("%B %d, %Y at %I:%M %p")
 
-    # 2. Create the HTML layout for the PDF with professional design
+    # 2. Create the HTML layout for the PDF (Tailwind won't work perfectly in PDF, so we use standard CSS)
     html_content = f"""
     <html>
     <head>
         <style>
-            @page {{
-                size: A4;
-                margin: 2.5cm;
-                @bottom-center {{
-                    content: "Page " counter(page) " of " counter(pages);
-                    font-size: 9px;
-                    color: #94a3b8;
-                }}
-            }}
-            
-            body {{
-                font-family: 'Helvetica', 'Arial', sans-serif;
-                color: #1e293b;
-                line-height: 1.5;
-                margin: 0;
-                padding: 0;
-            }}
-            
-            /* Header Section */
-            .header {{
-                text-align: center;
-                margin-bottom: 40px;
-                padding-bottom: 20px;
-                border-bottom: 3px solid #3b82f6;
-            }}
-            
-            .logo {{
-                font-size: 28px;
-                font-weight: 700;
-                color: #0f172a;
-                letter-spacing: -0.5px;
-                margin-bottom: 8px;
-            }}
-            
-            .logo-accent {{
-                color: #3b82f6;
-            }}
-            
-            .report-title {{
-                font-size: 20px;
-                font-weight: 500;
-                color: #334155;
-                margin-top: 5px;
-            }}
-            
-            .report-meta {{
-                font-size: 11px;
-                color: #64748b;
-                margin-top: 10px;
-            }}
-            
-            /* Stats Cards */
-            .stats-container {{
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 40px;
-                gap: 20px;
-            }}
-            
-            .stat-card {{
-                flex: 1;
-                background: #f8fafc;
-                border-radius: 12px;
-                padding: 20px;
-                text-align: center;
-                border: 1px solid #e2e8f0;
-            }}
-            
-            .stat-number {{
-                font-size: 32px;
-                font-weight: 700;
-                color: #3b82f6;
-                line-height: 1.2;
-            }}
-            
-            .stat-label {{
-                font-size: 11px;
-                color: #64748b;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-top: 8px;
-            }}
-            
-            /* Table Styles */
-            .registrations-table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin: 25px 0;
-                font-size: 12px;
-            }}
-            
-            .registrations-table th {{
-                background: linear-gradient(135deg, #f1f5f9 0%, #e9eef3 100%);
-                color: #1e293b;
-                font-weight: 600;
-                text-transform: uppercase;
-                font-size: 10px;
-                letter-spacing: 0.8px;
-                padding: 14px 12px;
-                border-bottom: 2px solid #cbd5e1;
-                text-align: left;
-            }}
-            
-            .registrations-table td {{
-                padding: 12px;
-                border-bottom: 1px solid #e2e8f0;
-                color: #334155;
-            }}
-            
-            .registrations-table tr:hover {{
-                background-color: #f8fafc;
-            }}
-            
-            .role-badge {{
-                display: inline-block;
-                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-                color: #1e40af;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 10px;
-                font-weight: 600;
-                letter-spacing: 0.3px;
-            }}
-            
-            /* Footer */
-            .footer {{
-                margin-top: 50px;
-                padding-top: 20px;
-                border-top: 1px solid #e2e8f0;
-                text-align: center;
-            }}
-            
-            .signature {{
-                font-size: 12px;
-                font-weight: 600;
-                color: #0f172a;
-                margin-top: 10px;
-            }}
-            
-            .signature-line {{
-                width: 200px;
-                height: 1px;
-                background: #cbd5e1;
-                margin: 15px auto 8px auto;
-            }}
-            
-            /* Empty State */
-            .empty-state {{
-                text-align: center;
-                padding: 60px 20px;
-                color: #94a3b8;
-            }}
-            
-            .empty-icon {{
-                font-size: 48px;
-                margin-bottom: 16px;
-            }}
+            body {{ font-family: Helvetica, Arial, sans-serif; color: #334155; margin: 30px; }}
+            .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ef4444; padding-bottom: 10px; }}
+            .title {{ font-size: 24px; font-weight: bold; color: #1e293b; }}
+            .tag {{ font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background-color: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }}
+            td {{ padding: 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }}
+            .role-badge {{ background-color: #eff6ff; color: #2563eb; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }}
+            .footer {{ text-align: center; margin-top: 40px; font-size: 12px; color: #64748b; }}
+            .signature {{ font-weight: bold; color: #0f172a; font-size: 14px; margin-top: 5px; }}
         </style>
     </head>
     <body>
-        <!-- Header -->
         <div class="header">
-            <div class="logo">
-                Ms<span class="logo-accent">STANSLOUS</span>
-            </div>
-            <div class="report-title">Registration Report</div>
-            <div class="report-meta">Generated on {current_date}</div>
+            <div class="title">Current Registrations Report</div>
+            <div class="tag">System Control Panel</div>
         </div>
-    """
-    
-    # Add stats if there are users
-    if users:
-        total_users = len(users)
-        unique_roles = len(set(user.role.role for user in users))
-        
-        html_content += f"""
-        <!-- Statistics Cards -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-number">{total_users}</div>
-                <div class="stat-label">Total Registrations</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{unique_roles}</div>
-                <div class="stat-label">Roles Filled</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{datetime.now().strftime("%b %d")}</div>
-                <div class="stat-label">Report Date</div>
-            </div>
-        </div>
-        """
-    
-    # Table Section
-    if users:
-        html_content += """
-        <table class="registrations-table">
+
+        <table>
             <thead>
                 <tr>
-                    <th style="width: 30%">Full Name</th>
-                    <th style="width: 40%">Email Address</th>
-                    <th style="width: 30%">Selected Role</th>
+                    <th>Full Name</th>
+                    <th>Student Email</th>
+                    <th>Selected Role</th>
                 </tr>
             </thead>
             <tbody>
-        """
-        
-        for idx, user in enumerate(users, 1):
-            html_content += f"""
+    """
+
+    for user in users:
+        html_content += f"""
                 <tr>
-                    <td style="font-weight: 500;">{user.name}</td>
+                    <td><b>{user.name}</b></td>
                     <td>{user.email}</td>
                     <td><span class="role-badge">{user.role.role}</span></td>
                 </tr>
-            """
-        
-        html_content += """
+        """
+
+    html_content += f"""
             </tbody>
         </table>
-        """
-    else:
-        html_content += """
-        <div class="empty-state">
-            <div class="empty-icon">📋</div>
-            <p>No registrations found</p>
-            <p style="font-size: 11px; margin-top: 8px;">Register some roles to see them here</p>
-        </div>
-        """
-    
-    # Footer
-    html_content += f"""
+
         <div class="footer">
-            <div class="signature-line"></div>
-            <div class="signature">
-                MsSTANSLOUS • Role Assignment System
-            </div>
-            <p style="font-size: 9px; color: #94a3b8; margin-top: 12px;">
-                This report is auto-generated and contains all current registrations.
-            </p>
+            <p>Report generated successfully.</p>
+            <div class="signature">Generated by: MsSTANSLOUS </div>
         </div>
     </body>
     </html>
