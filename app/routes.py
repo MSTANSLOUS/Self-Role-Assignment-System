@@ -66,6 +66,30 @@ def admin():
     )
 
 
+
+@routes_pb.route("/admin/data")
+def admin_data():
+    """AJAX endpoint for smooth pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
+    # Render just the table HTML (no full page)
+    html = render_template("admin_table.html", users=users)
+    
+    return {
+        "html": html,
+        "current_page": page,
+        "total_pages": pagination.pages,
+        "total_users": pagination.total,
+        "per_page": per_page
+    }
+
+
+
+
 #register fro a role
 @routes_pb.route("/register", methods=["POST"])
 def register():
