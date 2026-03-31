@@ -22,11 +22,50 @@
         .custom-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        
+        /* Mobile table card view styles */
+        @media (max-width: 768px) {
+            .desktop-table {
+                display: none;
+            }
+            .mobile-cards {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .desktop-table {
+                display: block;
+            }
+            .mobile-cards {
+                display: none;
+            }
+        }
+        
+        /* Card animation */
+        .user-card {
+        background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #e0e0e0;
+        }
+        
+        /* Smooth transitions */
+        .transition-slide {
+            transition: transform 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-    <nav class="bg-white border-b border-gray-100 shadow-sm">
+    <nav class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <span class="text-lg font-bold text-slate-800">Admin Portal</span>
@@ -127,13 +166,14 @@
                     <p class="text-sm text-gray-500">Track which users have registered for specific roles.</p>
                 </div>
 
-                    <a href="{{ url_for('routes.export_pdf') }}" class="flex items-center justify-center space-x-2 bg-red-600 text-white text-sm font-semibold px-4 py-2.5 rounded hover:bg-red-700 transition w-full md:w-auto shadow-sm">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                        <span>Export to PDF</span>
-                    </a>
+                <a href="{{ url_for('routes.export_pdf') }}" class="flex items-center justify-center space-x-2 bg-red-600 text-white text-sm font-semibold px-4 py-2.5 rounded hover:bg-red-700 transition w-full md:w-auto shadow-sm">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>Export to PDF</span>
+                </a>
             </div>
 
-            <div class="hidden md:block overflow-x-auto">
+            <!-- Desktop Table View -->
+            <div class="desktop-table overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wide border-b border-gray-100">
@@ -166,35 +206,62 @@
                 </table>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 md:hidden">
-                {% for user in users %}
-                <div class="border border-gray-100 rounded-lg p-4 space-y-3 relative bg-white">
-                    <form action="{{ url_for('routes.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this user?');" class="absolute top-4 right-4">
-                        <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700">Remove</button>
-                    </form>
-                    <div>
-                        <div class="text-xs font-bold text-gray-400 uppercase">Name</div>
-                        <div class="text-sm font-semibold text-slate-800">{{ user.name }}</div>
+            <!-- Mobile Cards View - Much Better on Small Screens! -->
+            <div class="mobile-cards space-y-3">
+                {% if users %}
+                    {% for user in users %}
+                    <div class="user-card relative">
+                        <!-- Delete button at top right -->
+                        <form action="{{ url_for('routes.delete_user', user_id=user.id) }}" method="POST" class="absolute top-4 right-4">
+                            <button type="submit" onclick="return confirm('Are you sure you want to remove {{ user.name }}?');" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-3 py-1 rounded-full">
+                                Remove
+                            </button>
+                        </form>
+                        
+                        <!-- User info in clean card layout -->
+                        <div class="space-y-3">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="text-xs font-bold text-gray-400 uppercase mb-1">Full Name</div>
+                                    <div class="text-base font-semibold text-slate-800 pr-16">{{ user.name }}</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-xs font-bold text-gray-400 uppercase mb-1">Email</div>
+                                <div class="text-sm text-gray-600 break-all">{{ user.email }}</div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-xs font-bold text-gray-400 uppercase mb-1">Selected Role</div>
+                                <span class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-bold">
+                                    {{ user.role.role }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-xs font-bold text-gray-400 uppercase">Email</div>
-                        <div class="text-sm text-gray-600">{{ user.email }}</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-12 text-gray-400">
+                        <i data-lucide="users" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p>No registrations yet</p>
                     </div>
-                    <div>
-                        <div class="text-xs font-bold text-gray-400 uppercase">Role</div>
-                        <span class="inline-block mt-0.5 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                            {{ user.role.role }}
-                        </span>
-                    </div>
-                </div>
-                {% endfor %}
+                {% endif %}
             </div>
+
+            <!-- Show message when no users -->
+            {% if not users %}
+            <div class="text-center py-12 text-gray-400 desktop-table">
+                <i data-lucide="users" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                <p>No registrations yet</p>
+            </div>
+            {% endif %}
 
         </section>
     </main>
 
     <script>
-        // Initialize the Lucide icons
+        // Initialize Lucide icons
         lucide.createIcons();
 
         // Control the sliding dashboard
@@ -208,6 +275,13 @@
                 track.classList.remove('-translate-x-1/2');
                 track.classList.add('translate-x-0');
             }
+        }
+        
+        // Re-initialize icons after any dynamic content (just in case)
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => {
+                lucide.createIcons();
+            }, 100);
         }
     </script>
 </body>
