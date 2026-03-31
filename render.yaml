@@ -14,9 +14,5 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-
-databases:
-  - name: self-role-db
-    databaseName: self_role_assignment
-    user: self_role_user
-    plan: free
+      - key: PYTHON_VERSION
+        value: 3.11.12
